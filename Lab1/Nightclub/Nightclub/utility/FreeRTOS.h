@@ -340,7 +340,7 @@ extern "C" {
 #ifndef traceTASK_SWITCHED_IN
 	/* Called after a task has been selected to run.  pxCurrentTCB holds a pointer
 	to the task control block of the selected task. */
-	#define traceTASK_SWITCHED_IN() analogWrite(DAC0, atoi(pcTaskGetTaskName(pxCurrentTCB)))
+	#define traceTASK_SWITCHED_IN() digitalWrite(13,1) /*analogWrite(DAC0, atoi(pcTaskGetTaskName(pxCurrentTCB)))*/
 #endif
 
 #ifndef traceINCREASE_TICK_COUNT
@@ -375,7 +375,7 @@ static void delayMicro(uint32_t micros) {
 #ifndef traceTASK_SWITCHED_OUT
 	/* Called before a task has been selected to run.  pxCurrentTCB holds a pointer
 	to the task control block of the task being switched out. */
-	#define traceTASK_SWITCHED_OUT() { analogWrite(DAC0, 0); delayMicro(250); }
+	#define traceTASK_SWITCHED_OUT() { /*analogWrite(DAC0, 0);*/ digitalWrite(13, 0); delayMicro(250);}
 #endif
 
 #ifndef traceTASK_PRIORITY_INHERIT
