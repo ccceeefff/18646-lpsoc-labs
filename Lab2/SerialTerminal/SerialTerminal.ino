@@ -10,6 +10,7 @@ void loop() {
   SerialUSB.print("cmd> ");
   while(!SerialUSB.available());
   command = SerialUSB.readStringUntil('\n');
-  SerialUSB.print("You said: ");
-  SerialUSB.println(command);
+  if(command.length() > 0){
+    SerialUSB.println(command);
+  }
 }
