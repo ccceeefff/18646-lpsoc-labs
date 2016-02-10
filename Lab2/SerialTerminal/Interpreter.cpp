@@ -8,6 +8,7 @@ Interpreter::Interpreter(Stream *stream)
       _argv[i] = "";
     }
     _inputBuffer = "";
+    _registeredCommands = 0;
 }
 
 void Interpreter::prompt()
@@ -19,6 +20,19 @@ void Interpreter::prompt()
     _inputBuffer.trim();
     this->parse(_inputBuffer);
   }
+}
+
+void Interpreter::registerCommand(String command, commandBlock execBlock)
+{
+  /*
+   * Ideally we should check if command was registered previously, but
+   * let's not worry about that this time
+   */
+
+   // add command to map
+   _commands[_registeredCommands] = command;
+   _execBlocks[_registeredCommands] = execBlock;
+   _registeredCommands++;
 }
 
 void Interpreter::parse(String line)
@@ -58,12 +72,21 @@ void Interpreter::parse(String line)
 
 void Interpreter::execute(String command, const char *params[], int paramCount)
 {
-  _stream->println("command: " + command);
-  if(paramCount > 0){
-    _stream->println("parameters: ");
-    for(int i=0; i<paramCount; i++){
-      _stream->println(params[i]);
+  /*
+   * Find registered command and execute with params
+   */
+
+  // print out command for reference sake
+  _stream->println(command);
+   
+  for(int i=0; i < _registeredCommands; i++){
+    if(_commands[i] == command){
+      _execBlocks[i](_stream, params, paramCount);
+      return;
     }
   }
+
+  // command was not found
+  _stream->println("Unknown command: '" + command + "'");
 }
 
