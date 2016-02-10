@@ -1,10 +1,17 @@
 #include "Interpreter.h"
 
+#include "Arduino_Due_SD_HSCMI.h"
 #include "shell.h"
 
 Interpreter *interpreter;
 
+// Note: need to create re-entrant version of SD library
+
 void setup() {
+
+  // initialize MassStorage
+  SD.Init();
+  
   // setup SerialUSB
   SerialUSB.begin(115200);
   while(!SerialUSB);

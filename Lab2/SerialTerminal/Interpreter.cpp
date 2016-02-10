@@ -18,6 +18,8 @@ void Interpreter::prompt()
   _inputBuffer = _stream->readStringUntil('\n');
   if(_inputBuffer.length() > 0){
     _inputBuffer.trim();
+    // echo the entered command
+    _stream->println(_inputBuffer);
     this->parse(_inputBuffer);
   }
 }
@@ -75,10 +77,7 @@ void Interpreter::execute(String command, const char *params[], int paramCount)
   /*
    * Find registered command and execute with params
    */
-
-  // print out command for reference sake
-  _stream->println(command);
-   
+ 
   for(int i=0; i < _registeredCommands; i++){
     if(_commands[i] == command){
       _execBlocks[i](_stream, params, paramCount);
