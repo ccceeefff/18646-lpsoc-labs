@@ -16,6 +16,8 @@ void sh_help(Stream *stream, const char *params[], int paramCount){
   stream->println("\trm - delete file from filesystem");
   stream->println("\tmkdir - create directory in filesystem");
   stream->println("\tmv - move or rename file");
+  stream->println("\ttakePicture - take a picture using the camera and save the image to SD");
+  stream->println("\ttakeMotionDetect - wait for motion, take a picture using the camera and save the image to SD");
   stream->println("\thelp - print this list of commands");
 }
 
