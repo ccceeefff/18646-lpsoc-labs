@@ -123,6 +123,7 @@ void sh_cat(Stream *stream, const char *params[], int paramCount){
         fileLength -= bytesRead;
       }
       fs.Close();
+      stream->println("");
     } else {
       stream->println("Cannot open file");
     }
