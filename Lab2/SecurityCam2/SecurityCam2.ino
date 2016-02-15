@@ -2,11 +2,16 @@
 #include <FreeRTOS_ARM.h>
 #include <basic_io_arm.h>
 
-#include "SCCommand.h"
+#include "SCProgramRegistry.h"
+#include "SCShell.h"
 
 #define SCInputSerial SerialUSB
+#define sc_stdin SerialUSB
+#define sc_stout SerialUSB 
 
 QueueHandle_t xCommandQueue;
+
+SCProgramRegistry *registry;
 
 void Task_Parser(void *arg){
   // parser task cannot start unless SCInputSerial is ready
@@ -38,6 +43,11 @@ void Task_Processor(void *arg){
     xQueueReceive(xCommandQueue, &command, portMAX_DELAY);
         
     //process commands
+    if(registry->execute(command, &sc_stdin, &sc_stout) != 0){
+      sc_stout.println("Error occured...");
+    }
+
+    /*
     SCInputSerial.println(command->getCommand());
     
     if(command->getArgCount() > 0){
@@ -46,6 +56,7 @@ void Task_Processor(void *arg){
         SCInputSerial.println(command->getArg(i));
       }
     }
+    */
 
     if(command != NULL){
       delete command;
@@ -55,10 +66,22 @@ void Task_Processor(void *arg){
   
 }
 
+void register_shell_commands(SCProgramRegistry *registry){
+  registry->registerProgram(new SCShell_pwd());
+  registry->registerProgram(new SCShell_cd());
+  registry->registerProgram(new SCShell_ls());
+  registry->registerProgram(new SCShell_cat());
+  registry->registerProgram(new SCShell_mkdir());
+  registry->registerProgram(new SCShell_rm());
+  registry->registerProgram(new SCShell_mv());
+}
+
 void setup() {
 
   // initialize objects
   SCInputSerial.begin(115200);
+  registry = new SCProgramRegistry();
+  register_shell_commands(registry);
 
   // setup queues
   xCommandQueue = xQueueCreate(5, sizeof(SCCommand *));

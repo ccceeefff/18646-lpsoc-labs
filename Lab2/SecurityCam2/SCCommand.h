@@ -1,3 +1,6 @@
+#ifndef SCCOMMAND_H
+#define SCCOMMAND_H
+
 #include <Arduino.h>
 
 #define MAX_ARG_COUNT 5
@@ -19,3 +22,4 @@ class SCCommand {
     int _argCount;
 };
 
+#endif //SCCOMMAND_H
