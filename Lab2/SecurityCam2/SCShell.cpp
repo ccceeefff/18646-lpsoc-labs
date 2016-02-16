@@ -1,5 +1,8 @@
 #include "SCShell.h"
 
+#include "Arduino_Due_SD_HSCMI.h"
+#include "FileUtils.h"
+
 /******************
  *  SCShell_pwd 
  ******************/
@@ -9,6 +12,7 @@ SCShell_pwd::SCShell_pwd(){
 }
     
 int SCShell_pwd::execute(SCCommand *command, SCStream *in, SCStream *out){
+  out->println(fUtils.getPWD());
   return 0;
 }
 
@@ -33,6 +37,43 @@ SCShell_cd::SCShell_cd(){
 }
     
 int SCShell_cd::execute(SCCommand *command, SCStream *in, SCStream *out){
+  
+  if(command->getArgCount() == 0){
+    fUtils.setPWD(ROOT_DIR);
+    return 0;
+  }
+
+  // get target directory
+  String target = command->getArg(0); // only honor first parameter
+  String pwd = fUtils.getPWD();
+
+  // special cases "." and ".."
+  if(target == "."){
+    // do nothing, keep current directory
+    return 0;
+  }
+
+  if(target == ".."){
+    // look for second to last "/"
+    int level = pwd.lastIndexOf("/", pwd.length()-2);
+    if(level > 0){ // only pop if not in root directory
+      pwd.remove(level+1);
+    } else { // reset to root
+      pwd = String(ROOT_DIR);
+    }
+    fUtils.setPWD(pwd);
+    return 0;
+  }
+
+  // check if path exists from PWD and then update PWD
+  if(SD.PathExists(fUtils.combineName(pwd, target).c_str())){
+    pwd.concat(target + "/");
+    fUtils.setPWD(pwd);
+  } else {
+    out->println(target + " does not exist.");
+    return -1;
+  }
+  
   return 0;
 }
 

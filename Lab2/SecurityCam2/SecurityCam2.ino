@@ -2,6 +2,8 @@
 #include <FreeRTOS_ARM.h>
 #include <basic_io_arm.h>
 
+//#include "Arduino_Due_SD_HSCMI.h"
+#include "FileUtils.h"
 #include "SCProgramRegistry.h"
 #include "SCShell.h"
 #include "SCStream.h"
@@ -73,17 +75,6 @@ static void Task_Processor(void *arg){
       processorOutStream->println("Error occured...");
     }
 
-    /*
-    SCInputSerial.println(command->getCommand());
-    
-    if(command->getArgCount() > 0){
-      SCInputSerial.println("parameters:");
-      for(int i=0; i < command->getArgCount(); i++){
-        SCInputSerial.println(command->getArg(i));
-      }
-    }
-    */
-
     if(command != NULL){
       delete command;
     } 
@@ -116,9 +107,12 @@ void register_shell_commands(SCProgramRegistry *registry){
 }
 
 void setup() {
+  
 
   // initialize objects
+//  SD.Init();
   SCInputSerial.begin(115200);
+  fUtils.Init();
   registry = new SCProgramRegistry();
   register_shell_commands(registry);
 
