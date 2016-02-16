@@ -2,7 +2,7 @@
 #include <FreeRTOS_ARM.h>
 #include <basic_io_arm.h>
 
-//#include "Arduino_Due_SD_HSCMI.h"
+#include "Arduino_Due_SD_HSCMI.h"
 #include "FileUtils.h"
 #include "SCProgramRegistry.h"
 #include "SCShell.h"
@@ -72,7 +72,7 @@ static void Task_Processor(void *arg){
         
     //process commands
     if(registry->execute(command, inStream, processorOutStream) != 0){
-      processorOutStream->println("Error occured...");
+      //processorOutStream->println("Error occured...");
     }
 
     if(command != NULL){
@@ -110,8 +110,8 @@ void setup() {
   
 
   // initialize objects
-//  SD.Init();
   SCInputSerial.begin(115200);
+  SD.Init();
   fUtils.Init();
   registry = new SCProgramRegistry();
   register_shell_commands(registry);
@@ -134,7 +134,7 @@ void setup() {
 
   // create the parser task to wait for inputs from the serial port
   xTaskCreate(Task_Parser, NULL, configMINIMAL_STACK_SIZE, NULL, 1, NULL);
-  xTaskCreate(Task_Processor, NULL, 200, NULL, 1, NULL);
+  xTaskCreate(Task_Processor, NULL, 400, NULL, 1, NULL);
   xTaskCreate(Task_SerialOutGateKeeper, NULL, 200, NULL, 1, NULL);
 
   // start scheduler

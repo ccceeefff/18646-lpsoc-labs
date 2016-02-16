@@ -33,6 +33,8 @@ int SCProgramRegistry::execute(SCCommand *command, SCStream *in, SCStream *out){
     }
   }
 
+  out->println("Unknown command: " + command->getCommand());
+
   return ERR_UNKNOWN_COMMAND;
 }
 

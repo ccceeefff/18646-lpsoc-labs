@@ -20,10 +20,10 @@ String FileUtils::getPWD(){
   return _pwd;
 }
 
-String FileUtils::combineName(String directory, String filename){
-  String out;
+String *FileUtils::combineName(String directory, String filename){
+  String *out;
   xSemaphoreTake(_xSemaphore, portMAX_DELAY);
-  out = String(SD.CombineName(directory.c_str(), filename.c_str()));
+  out = new String(SD.CombineName(directory.c_str(), filename.c_str()));
   xSemaphoreGive(_xSemaphore);
   return out;
 }

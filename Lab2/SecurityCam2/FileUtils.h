@@ -12,7 +12,7 @@ class FileUtils {
     String getPWD();
 
     // mutex protected version of SD library
-    String combineName(String directory, String filename);
+    String *combineName(String directory, String filename);
 
   private:
     String _pwd;
