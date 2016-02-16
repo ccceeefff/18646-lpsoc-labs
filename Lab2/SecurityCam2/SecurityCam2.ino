@@ -27,7 +27,7 @@ SCStream *inStream = new SCSerialStream(&SerialUSB);
 SCStream *parserOutStream = new SCSerialStream(&SerialUSB);
 SCStream *processorOutStream = new SCSerialStream(&SerialUSB);
 
-bool interactiveShellMode = false; 
+boolean interactiveShellMode = false; 
 
 static void Task_Parser(void *arg){
   // parser task cannot start unless SCInputSerial is ready
@@ -98,6 +98,12 @@ static void Task_SerialOutGateKeeper(void *arg){
   }
 }
 
+static void Task_CameraDriver(void *arg){
+  while(1){
+    
+  }
+}
+
 void register_camera_commands(SCProgramRegistry *registry){
   
 }
@@ -123,7 +129,6 @@ void setup() {
   shellRegistry = new SCProgramRegistry();
   register_shell_commands(shellRegistry);
   shellRegistry->registerProgram(cameraRegistry);
-
   // setup queues
   xCommandQueue = xQueueCreate(5, sizeof(SCCommand *));
 
