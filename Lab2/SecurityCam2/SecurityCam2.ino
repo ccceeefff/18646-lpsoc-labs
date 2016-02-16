@@ -11,15 +11,19 @@
 QueueHandle_t xCommandQueue;
 
 #define PRINT_QUEUE_SIZE 10
-#define PRINT_QUEUE_SIZE_TOTAL (1*PRINT_QUEUE_SIZE)
+#define PRINT_QUEUE_SIZE_TOTAL (2*PRINT_QUEUE_SIZE)
 
 QueueSetHandle_t xPrintQueueSet;
+QueueHandle_t xParserPrintQueue;
 QueueHandle_t xProcessorPrintQueue;
 
 SCProgramRegistry *registry;
 
 SCStream *inStream = new SCSerialStream(&SerialUSB);
-SCStream *outStream = new SCSerialStream(&SerialUSB);
+SCStream *parserOutStream = new SCSerialStream(&SerialUSB);
+SCStream *processorOutStream = new SCSerialStream(&SerialUSB);
+
+bool interactiveShellMode = false; 
 
 static void Task_Parser(void *arg){
   // parser task cannot start unless SCInputSerial is ready
@@ -34,8 +38,22 @@ static void Task_Parser(void *arg){
       String inputBuffer = SCInputSerial.readStringUntil('\n');
       if(inputBuffer.length() > 0){
         inputBuffer.trim();
-        SCCommand *command = new SCCommand(inputBuffer);
-        xQueueSendToBack(xCommandQueue, &command, portMAX_DELAY);
+
+        if(inputBuffer == "interactive"){
+          // echo if interactive
+          interactiveShellMode = !interactiveShellMode;
+          if(interactiveShellMode){
+            parserOutStream->println("interactive shell on");  
+          } else {
+            parserOutStream->println("interactive shell off");
+          }
+        } else {
+          if(interactiveShellMode){
+            parserOutStream->println(inputBuffer);
+          }
+          SCCommand *command = new SCCommand(inputBuffer);
+          xQueueSendToBack(xCommandQueue, &command, portMAX_DELAY);
+        }
       }
     } else {
       taskYIELD();
@@ -51,8 +69,8 @@ static void Task_Processor(void *arg){
     xQueueReceive(xCommandQueue, &command, portMAX_DELAY);
         
     //process commands
-    if(registry->execute(command, inStream, outStream) != 0){
-      outStream->println("Error occured...");
+    if(registry->execute(command, inStream, processorOutStream) != 0){
+      processorOutStream->println("Error occured...");
     }
 
     /*
@@ -107,13 +125,16 @@ void setup() {
   // setup queues
   xCommandQueue = xQueueCreate(5, sizeof(SCCommand *));
 
+  xParserPrintQueue = xQueueCreate(PRINT_QUEUE_SIZE, sizeof(SCQueueBuffer *));
   xProcessorPrintQueue = xQueueCreate(PRINT_QUEUE_SIZE, sizeof(SCQueueBuffer *));
 
   xPrintQueueSet = xQueueCreateSet( PRINT_QUEUE_SIZE_TOTAL );
 
+  xQueueAddToSet( xParserPrintQueue, xPrintQueueSet );
   xQueueAddToSet( xProcessorPrintQueue, xPrintQueueSet );
 
-  outStream = new SCQueueStream(xProcessorPrintQueue);
+  parserOutStream = new SCQueueStream(xParserPrintQueue);
+  processorOutStream = new SCQueueStream(xProcessorPrintQueue);
   
   // setup tasks
 
