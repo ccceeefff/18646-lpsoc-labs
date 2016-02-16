@@ -19,7 +19,7 @@ void SCProgramRegistry::registerProgram(SCProgram *program){
   _registeredPrograms++;
 }
 
-int SCProgramRegistry::execute(SCCommand *command, Stream *in, Stream *out){
+int SCProgramRegistry::execute(SCCommand *command, SCStream *in, SCStream *out){
   // special command
   if(command->getCommand() == "help"){ 
       printCommandList(out);
@@ -36,7 +36,7 @@ int SCProgramRegistry::execute(SCCommand *command, Stream *in, Stream *out){
   return ERR_UNKNOWN_COMMAND;
 }
 
-void SCProgramRegistry::printCommandList(Stream *out){
+void SCProgramRegistry::printCommandList(SCStream *out){
   out->println("List of available commands:");
   out->println("\thelp - print this list of commands");
   for(int i=0; i < _registeredPrograms; i++){

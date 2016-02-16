@@ -8,7 +8,7 @@ SCShell_pwd::SCShell_pwd(){
   
 }
     
-int SCShell_pwd::execute(SCCommand *command, Stream *in, Stream *out){
+int SCShell_pwd::execute(SCCommand *command, SCStream *in, SCStream *out){
   return 0;
 }
 
@@ -32,7 +32,7 @@ SCShell_cd::SCShell_cd(){
   
 }
     
-int SCShell_cd::execute(SCCommand *command, Stream *in, Stream *out){
+int SCShell_cd::execute(SCCommand *command, SCStream *in, SCStream *out){
   return 0;
 }
 
@@ -56,7 +56,7 @@ SCShell_ls::SCShell_ls(){
   
 }
     
-int SCShell_ls::execute(SCCommand *command, Stream *in, Stream *out){
+int SCShell_ls::execute(SCCommand *command, SCStream *in, SCStream *out){
   return 0;
 }
 
@@ -80,7 +80,7 @@ SCShell_mkdir::SCShell_mkdir(){
   
 }
     
-int SCShell_mkdir::execute(SCCommand *command, Stream *in, Stream *out){
+int SCShell_mkdir::execute(SCCommand *command, SCStream *in, SCStream *out){
   return 0;
 }
 
@@ -105,7 +105,7 @@ SCShell_cat::SCShell_cat(){
   
 }
     
-int SCShell_cat::execute(SCCommand *command, Stream *in, Stream *out){
+int SCShell_cat::execute(SCCommand *command, SCStream *in, SCStream *out){
   return 0;
 }
 
@@ -129,7 +129,7 @@ SCShell_rm::SCShell_rm(){
 
 }
     
-int SCShell_rm::execute(SCCommand *command, Stream *in, Stream *out){
+int SCShell_rm::execute(SCCommand *command, SCStream *in, SCStream *out){
   return 0;
 }
 
@@ -153,7 +153,7 @@ SCShell_mv::SCShell_mv(){
   
 }
     
-int SCShell_mv::execute(SCCommand *command, Stream *in, Stream *out){
+int SCShell_mv::execute(SCCommand *command, SCStream *in, SCStream *out){
   return 0;
 }
 

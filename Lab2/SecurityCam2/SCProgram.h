@@ -2,10 +2,11 @@
 #define SCPROGRAM_H
 
 #include "SCCommand.h"
+#include "SCStream.h"
 
 class SCProgram {
    public:
-    virtual int execute(SCCommand *command, Stream *in, Stream *out);
+    virtual int execute(SCCommand *command, SCStream *in, SCStream *out);
     virtual String getCommand();
     virtual String getDescription();
 };

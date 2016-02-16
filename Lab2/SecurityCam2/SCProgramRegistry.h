@@ -13,12 +13,12 @@ class SCProgramRegistry : public SCProgram {
     ~SCProgramRegistry();
     void registerProgram(SCProgram *program);
 
-    int execute(SCCommand *command, Stream *in, Stream *out);
+    int execute(SCCommand *command, SCStream *in, SCStream *out);
     String getCommand();
     String getDescription();
 
   protected:
-    void printCommandList(Stream *out);
+    void printCommandList(SCStream *out);
 
   private:
     SCProgram *_registry[MAX_COMMAND_COUNT];
