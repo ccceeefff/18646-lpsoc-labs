@@ -20,7 +20,7 @@ class SCProgramRegistry : public SCProgram {
   protected:
     void printCommandList(SCStream *out);
 
-  private:
+//  private:
     SCProgram *_registry[MAX_COMMAND_COUNT];
     int _registeredPrograms;
 };

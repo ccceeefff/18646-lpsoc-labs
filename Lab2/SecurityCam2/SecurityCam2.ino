@@ -4,6 +4,7 @@
 
 #include "Arduino_Due_SD_HSCMI.h"
 #include "FileUtils.h"
+#include "SCCameraRegister.h"
 #include "SCProgramRegistry.h"
 #include "SCShell.h"
 #include "SCStream.h"
@@ -19,7 +20,8 @@ QueueSetHandle_t xPrintQueueSet;
 QueueHandle_t xParserPrintQueue;
 QueueHandle_t xProcessorPrintQueue;
 
-SCProgramRegistry *registry;
+SCProgramRegistry *shellRegistry;
+SCCameraRegistry *cameraRegistry;
 
 SCStream *inStream = new SCSerialStream(&SerialUSB);
 SCStream *parserOutStream = new SCSerialStream(&SerialUSB);
@@ -71,7 +73,7 @@ static void Task_Processor(void *arg){
     xQueueReceive(xCommandQueue, &command, portMAX_DELAY);
         
     //process commands
-    if(registry->execute(command, inStream, processorOutStream) != 0){
+    if(shellRegistry->execute(command, inStream, processorOutStream) != 0){
       //processorOutStream->println("Error occured...");
     }
 
@@ -96,6 +98,10 @@ static void Task_SerialOutGateKeeper(void *arg){
   }
 }
 
+void register_camera_commands(SCProgramRegistry *registry){
+  
+}
+
 void register_shell_commands(SCProgramRegistry *registry){
   registry->registerProgram(new SCShell_pwd());
   registry->registerProgram(new SCShell_cd());
@@ -113,8 +119,10 @@ void setup() {
   SCInputSerial.begin(115200);
   SD.Init();
   fUtils.Init();
-  registry = new SCProgramRegistry();
-  register_shell_commands(registry);
+  cameraRegistry = new SCCameraRegistry();
+  shellRegistry = new SCProgramRegistry();
+  register_shell_commands(shellRegistry);
+  shellRegistry->registerProgram(cameraRegistry);
 
   // setup queues
   xCommandQueue = xQueueCreate(5, sizeof(SCCommand *));

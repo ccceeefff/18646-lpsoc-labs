@@ -47,3 +47,14 @@ String SCCommand::getArg(int argIndex){
   return String();
 }
 
+void SCCommand::shift(){
+  if(_argCount > 0){
+    _command = _args[0];
+    // shift down all other args
+    for(int i=1; i < _argCount; i++){
+      _args[i-1] = _args[i];
+    }
+    _argCount--;
+  }
+}
+

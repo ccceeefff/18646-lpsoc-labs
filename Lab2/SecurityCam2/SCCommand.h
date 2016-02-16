@@ -13,6 +13,9 @@ class SCCommand {
     int getArgCount();
     String getArg(int argIndex);
 
+    // shift the command out and move in the first argument
+    void shift();
+
   protected:
     void parse(String line);
 
