@@ -17,7 +17,6 @@ void SCCamera::Init(SCStream *outStream){
   _imageDirectory = dir->substring(0); // make local copy
   delete dir;
   _cam->setImageSize(VC0706_160x120); // default image size
-  this->setMotionDetect(true);
 }
 
 String SCCamera::getImageDirectory(){

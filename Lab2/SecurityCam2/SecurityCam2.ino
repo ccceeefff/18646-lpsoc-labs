@@ -52,7 +52,7 @@ static void Task_Parser(void *arg){
     taskYIELD();
   }
 
-  SCInputSerial.println("Serial opened");
+  parserOutStream->println("Serial opened");
   
   while(1){
     if(SCInputSerial.available()){
@@ -114,12 +114,16 @@ static void Task_SerialOutGateKeeper(void *arg){
 }
 
 static void Task_CameraDriver(void *arg){
+  cameraDriver.Init(cameraDriverOutStream);
+  cameraDriverOutStream->println("Camera Driver ready!");
+  
   SCCameraCommand *command = NULL;
   while(1){
     // check the queue for any incoming commands
     QueueHandle_t activeQueue = xQueueSelectFromSet( xCameraDriverQueueSet, 0 ); // do not block
     if(activeQueue != NULL){
       if(xQueueReceive(activeQueue, &command, 0)){
+        
         boolean retry = false;
         // at this time, the assumption is that all commands are properly formatted
         // no need to check for improper parameters, etc.
@@ -220,10 +224,6 @@ void setup() {
   cameraDriverOutStream = new SCQueueStream(xCameraDriverPrintQueue);
 
   SCInputSerial.println("Queues ready!");
-  
-  cameraDriver.Init(cameraDriverOutStream);
-
-  SCInputSerial.println("Drivers ready!");
   
   cameraRegistry = new SCCameraRegistry();
   shellRegistry = new SCProgramRegistry();
