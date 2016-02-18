@@ -150,6 +150,9 @@ static void Task_CameraDriver(void *arg){
           case CAMERA_SET_IMAGE_DIRECTORY:
             cameraDriver.setImageDirectory(command->getParameter());
             break;
+          case CAMERA_SET_TV_ENABLED:
+            retry = !cameraDriver.setTVEnabled(command->getParameter() == "enable");
+            break;
         }
 
         if(retry){
@@ -172,6 +175,7 @@ void register_camera_commands(SCProgramRegistry *registry){
   registry->registerProgram(new SCCamera_imageSize(xCameraDriverCommandQueue));
   registry->registerProgram(new SCCamera_motionDetect(xCameraDriverCommandQueue));
   registry->registerProgram(new SCCamera_cd(xCameraDriverCommandQueue));
+  registry->registerProgram(new SCCamera_tv(xCameraDriverCommandQueue));
 }
 
 void register_shell_commands(SCProgramRegistry *registry){

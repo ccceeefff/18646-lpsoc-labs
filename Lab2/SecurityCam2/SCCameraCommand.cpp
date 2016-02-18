@@ -176,3 +176,36 @@ String SCCamera_cd::getCommand(){
 String SCCamera_cd::getDescription(){
   return "change where the camera should store images";
 }
+
+/*
+ * Camera TV
+ */
+
+SCCamera_tv::SCCamera_tv(QueueHandle_t commandQueue){
+  _commandQueue = commandQueue;
+}
+
+int SCCamera_tv::execute(SCCommand *command, SCStream *in, SCStream *out){
+if(command->getArgCount() == 0){
+    out->println("Must specify enable or disable");
+    return -1;
+  }
+  String arg = command->getArg(0);
+  if(arg == "enable" || arg == "disable"){
+    SCCameraCommand *cmd = new SCCameraCommand(CAMERA_SET_TV_ENABLED, arg);
+    xQueueSendToBack(_commandQueue, &cmd, portMAX_DELAY);  
+  } else {
+    out->println("Must specify enable or disable");
+    return -2;
+  }
+  
+  return 0;
+}
+
+String SCCamera_tv::getCommand(){
+  return "tv";
+}
+
+String SCCamera_tv::getDescription(){
+  return "enable or disable the camera tv output";
+}

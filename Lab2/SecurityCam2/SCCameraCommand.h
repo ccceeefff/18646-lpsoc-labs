@@ -11,6 +11,7 @@
 #define CAMERA_SET_IMAGE_SIZE 0x03
 #define CAMERA_SET_MOTION_DETECT 0x04
 #define CAMERA_SET_IMAGE_DIRECTORY 0x05
+#define CAMERA_SET_TV_ENABLED 0x06
 
 class SCCameraCommand {
   public:
@@ -72,6 +73,17 @@ class SCCamera_motionDetect : public SCProgram {
 class SCCamera_cd : public SCProgram {
   public:
     SCCamera_cd(QueueHandle_t commandQueue);
+    int execute(SCCommand *command, SCStream *in, SCStream *out);
+    String getCommand();
+    String getDescription();
+
+  private:
+    QueueHandle_t _commandQueue;
+};
+
+class SCCamera_tv : public SCProgram {
+  public:
+    SCCamera_tv(QueueHandle_t commandQueue);
     int execute(SCCommand *command, SCStream *in, SCStream *out);
     String getCommand();
     String getDescription();
