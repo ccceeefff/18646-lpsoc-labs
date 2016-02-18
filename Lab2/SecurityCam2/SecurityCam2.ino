@@ -185,6 +185,9 @@ void register_shell_commands(SCProgramRegistry *registry){
 }
 
 void setup() {
+
+  pd_rtos_init();
+  
   // initialize objects
   SCInputSerial.begin(115200);
   while(!SCInputSerial);
