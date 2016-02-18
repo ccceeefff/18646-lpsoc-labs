@@ -120,6 +120,26 @@ boolean SCCamera::setImageSize(uint8_t size){
   return false;
 }
 
+boolean SCCamera::setTVEnabled(boolean enable){
+  if(enable){
+    if(_cam->TVon()){
+      if(_logging){
+        _outStream->println("TV output enabled");  
+      }
+      return true;
+    }
+    return false;
+  } else {
+    if(_cam->TVoff()){
+      if(_logging){
+        _outStream->println("TV output disabled");  
+      }
+      return true;
+    }
+    return false;
+  }
+}
+
 void SCCamera::setLogging(boolean enable){
   _logging = enable;
   if(enable){

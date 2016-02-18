@@ -15,6 +15,7 @@ class SCCamera {
     void takePicture();
     void checkMotionDetected();
     boolean setMotionDetect(boolean detect);
+    boolean setTVEnabled(boolean enable);
     
     boolean setImageSize(uint8_t size);
 
