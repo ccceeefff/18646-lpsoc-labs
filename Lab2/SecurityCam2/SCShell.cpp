@@ -3,7 +3,7 @@
 #include "Arduino_Due_SD_HSCMI.h"
 #include "FileUtils.h"
 
-#define READ_CHUNK_SIZE 128
+#define READ_CHUNK_SIZE 64
 
 /******************
  *  SCShell_pwd 

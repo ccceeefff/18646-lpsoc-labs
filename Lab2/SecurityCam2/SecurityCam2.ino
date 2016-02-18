@@ -71,8 +71,9 @@ int ff_del_syncobj (_SYNC_t obj){   /* Delete a sync object */
 
 static void Task_Parser(void *arg){
   // parser task cannot start unless SCInputSerial is ready
+
   while(!SCInputSerial){
-    taskYIELD();
+     taskYIELD();
   }
 
   parserOutStream->println("Serial opened");
@@ -100,7 +101,7 @@ static void Task_Parser(void *arg){
         }
       }
     } else {
-      taskYIELD();
+       taskYIELD();
     }
   }
 }
@@ -129,7 +130,9 @@ static void Task_SerialOutGateKeeper(void *arg){
     QueueHandle_t activeQueue = xQueueSelectFromSet( xPrintQueueSet, portMAX_DELAY );
     xQueueReceive(activeQueue, &buffer, 0);
     if(buffer != NULL){
-      SerialUSB.write(buffer->getBuffer(), buffer->getSize());
+      if(buffer->getSize() > 0){
+        SerialUSB.write(buffer->getBuffer(), buffer->getSize());
+      }
       delete buffer; 
     }
     buffer = NULL;                                          
@@ -137,6 +140,11 @@ static void Task_SerialOutGateKeeper(void *arg){
 }
 
 static void Task_CameraDriver(void *arg){
+  SD.Init();
+  fUtils.Init();
+
+  SCInputSerial.println("Filesystem Ready!");
+
   cameraDriver.Init(cameraDriverOutStream);
   cameraDriverOutStream->println("Camera Driver ready!");
   
@@ -219,10 +227,6 @@ void setup() {
   SCInputSerial.begin(115200);
   while(!SCInputSerial);
   SCInputSerial.println("Ready!");
-  SD.Init();
-  fUtils.Init();
-
-  SCInputSerial.println("Filesystem Ready!");
   
   // setup queues
 
@@ -266,10 +270,16 @@ void setup() {
   // setup tasks
 
   // create the parser task to wait for inputs from the serial port
-  xTaskCreate(Task_Parser, NULL, configMINIMAL_STACK_SIZE, NULL, 1, NULL);
-  xTaskCreate(Task_Processor, NULL, 800, NULL, 1, NULL);
-  xTaskCreate(Task_SerialOutGateKeeper, NULL, 200, NULL, 1, NULL);
-  xTaskCreate(Task_CameraDriver, NULL, 800, NULL, 1, NULL);
+  TaskHandle_t xHandle = NULL;
+  xTaskCreate(Task_Parser, NULL, configMINIMAL_STACK_SIZE, NULL, 1, &xHandle);
+  vTaskSetTaskNumber(xHandle, 2);
+  xTaskCreate(Task_Processor, NULL, 800, NULL, 1, &xHandle);
+  vTaskSetTaskNumber(xHandle, 4);
+  xTaskCreate(Task_SerialOutGateKeeper, NULL, 200, NULL, 1, &xHandle);
+  vTaskSetTaskNumber(xHandle, 8);
+  xTaskCreate(Task_CameraDriver, NULL, 800, NULL, 1, &xHandle);
+  vTaskSetTaskNumber(xHandle, 12);
+//  vTaskSetTaskNumber(xTaskGetIdleTaskHandle(), 1);
 
   SCInputSerial.println("Tasks ready!");
 
