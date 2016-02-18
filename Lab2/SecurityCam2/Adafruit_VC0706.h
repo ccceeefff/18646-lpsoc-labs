@@ -25,6 +25,11 @@
  #include "NewSoftSerial.h"
 #endif
 
+#define USE_FREERTOS 1
+#if USE_FREERTOS == 1
+  #include <FreeRTOS_ARM.h>
+#endif  
+
 #define VC0706_RESET  0x26
 #define VC0706_GEN_VERSION 0x11
 #define VC0706_SET_PORT 0x24

@@ -17,6 +17,7 @@
 
 #include "Adafruit_VC0706.h"
 
+
 // Initialization code used by all constructor types
 void Adafruit_VC0706::common_init(void) {
 #if not defined (_VARIANT_ARDUINO_DUE_X_) && not defined (_VARIANT_ARDUINO_ZERO_)
@@ -442,7 +443,11 @@ uint8_t Adafruit_VC0706::readResponse(uint8_t numbytes, uint8_t timeout) {
     avail = hwSerial->available();
 #endif
     if (avail <= 0) {
+#if USE_FREERTOS
+      vTaskDelay(1);
+#else
       delay(1);
+#endif    
       counter++;
       continue;
     }
