@@ -46,6 +46,29 @@ SCStream *cameraDriverOutStream = new SCSerialStream(&SerialUSB);
 
 boolean interactiveShellMode = false; 
 
+
+#if _FS_REENTRANT
+int ff_cre_syncobj (BYTE, _SYNC_t *obj)/* Create a sync object */
+{
+  *obj = xSemaphoreCreateCounting(1,1);
+  return 1;
+}
+
+int ff_req_grant (_SYNC_t obj){   /* Lock sync object */
+  return (xSemaphoreTake(obj, _FS_TIMEOUT) == pdTRUE);
+} 
+
+void ff_rel_grant (_SYNC_t obj){     /* Unlock sync object */
+  xSemaphoreGive(obj);
+} 
+
+int ff_del_syncobj (_SYNC_t obj){   /* Delete a sync object */
+  vSemaphoreDelete(obj);
+  return 1;
+} 
+#endif
+
+
 static void Task_Parser(void *arg){
   // parser task cannot start unless SCInputSerial is ready
   while(!SCInputSerial){
