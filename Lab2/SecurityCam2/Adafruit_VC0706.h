@@ -25,7 +25,7 @@
  #include "NewSoftSerial.h"
 #endif
 
-#define USE_FREERTOS 1
+#define USE_FREERTOS 0
 #if USE_FREERTOS == 1
   #include <FreeRTOS_ARM.h>
 #endif  

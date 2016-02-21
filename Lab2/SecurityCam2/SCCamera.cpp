@@ -31,6 +31,7 @@ void SCCamera::setImageDirectory(String dir){
 }
 
 void SCCamera::checkMotionDetected(){
+//  return;
   if(_cam->motionDetected()){
     if(_logging){
       _outStream->println("Motion detected!");  
@@ -40,6 +41,7 @@ void SCCamera::checkMotionDetected(){
 }
 
 boolean SCCamera::setMotionDetect(boolean detect){
+//  return true;
   if(_cam->setMotionDetect(detect)){
     pd_rgb_led(PD_BLUE);
     if(_logging){
@@ -57,6 +59,7 @@ boolean SCCamera::setMotionDetect(boolean detect){
 }
 
 void SCCamera::takePicture(){
+//  return;
   this->setMotionDetect(false);
   pd_rgb_led(PD_GREEN);
   if(_logging){
@@ -111,6 +114,7 @@ void SCCamera::takePicture(){
 }
 
 boolean SCCamera::setImageSize(uint8_t size){
+//  return true;
   if(_cam->setImageSize(size)){
     if(_logging){
       _outStream->println("Image size set.");  
@@ -121,6 +125,7 @@ boolean SCCamera::setImageSize(uint8_t size){
 }
 
 boolean SCCamera::setTVEnabled(boolean enable){
+//  return true;
   if(enable){
     if(_cam->TVon()){
       if(_logging){

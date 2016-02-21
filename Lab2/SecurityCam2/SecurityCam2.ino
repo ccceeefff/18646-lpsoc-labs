@@ -25,7 +25,7 @@ QueueSetHandle_t xCameraDriverQueueSet;
 QueueHandle_t xCameraDriverCommandQueue;
 QueueHandle_t xCameraDriverRetryQueue;
 
-#define PRINT_QUEUE_SIZE 10
+#define PRINT_QUEUE_SIZE 5
 #define PRINT_QUEUE_SIZE_TOTAL (3*PRINT_QUEUE_SIZE)
 
 QueueSetHandle_t xPrintQueueSet;
@@ -68,12 +68,11 @@ int ff_del_syncobj (_SYNC_t obj){   /* Delete a sync object */
 } 
 #endif
 
-
 static void Task_Parser(void *arg){
   // parser task cannot start unless SCInputSerial is ready
 
   while(!SCInputSerial){
-     taskYIELD();
+     //taskYIELD();
   }
 
   parserOutStream->println("Serial opened");
@@ -101,7 +100,7 @@ static void Task_Parser(void *arg){
         }
       }
     } else {
-       taskYIELD();
+       //taskYIELD();
     }
   }
 }
@@ -135,7 +134,7 @@ static void Task_SerialOutGateKeeper(void *arg){
       }
       delete buffer; 
     }
-    buffer = NULL;                                          
+    buffer = NULL;                 
   }
 }
 
@@ -273,11 +272,11 @@ void setup() {
   TaskHandle_t xHandle = NULL;
   xTaskCreate(Task_Parser, NULL, configMINIMAL_STACK_SIZE, NULL, 1, &xHandle);
   vTaskSetTaskNumber(xHandle, 2);
-  xTaskCreate(Task_Processor, NULL, 800, NULL, 1, &xHandle);
+  xTaskCreate(Task_Processor, NULL, 1000, NULL, 1, &xHandle);
   vTaskSetTaskNumber(xHandle, 4);
-  xTaskCreate(Task_SerialOutGateKeeper, NULL, 200, NULL, 1, &xHandle);
+  xTaskCreate(Task_SerialOutGateKeeper, NULL, 400, NULL, 1, &xHandle);
   vTaskSetTaskNumber(xHandle, 8);
-  xTaskCreate(Task_CameraDriver, NULL, 800, NULL, 1, &xHandle);
+  xTaskCreate(Task_CameraDriver, NULL, 1000, NULL, 1, &xHandle);
   vTaskSetTaskNumber(xHandle, 12);
 //  vTaskSetTaskNumber(xTaskGetIdleTaskHandle(), 1);
 
@@ -285,6 +284,7 @@ void setup() {
 
   // start scheduler
   SCInputSerial.println("Start!");
+
   vTaskStartScheduler();
   
   vPrintString("Insufficient RAM\n");
