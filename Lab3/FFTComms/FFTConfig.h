@@ -4,21 +4,21 @@
 #define NUM_BUFFERS 2
 #define NUM_SAMPLES 16
 
-#define SAMPLING_RATE 100
+#define SAMPLING_RATE 10
 
-#define ADC_PORT 0
+#define ADC_PORT 9
 
 #define AUDIO_BUFFER_QUEUE_SIZE 5
 #define SENDER_QUEUE_SIZE 5
 
-#define LOCAL_FFT 1
+#define LOCAL_FFT 0
 
 /*
  * WiFi ESP8266 Properties
  */
-#define NET_SUBMIT 0
+#define NET_SUBMIT 1
  
 #define PDWiFiSerial Serial1
-#define PDWiFiSerialBaudRate 9600
+#define PDWiFiSerialBaudRate 1
 
 #endif //FFTCONFIG_H
