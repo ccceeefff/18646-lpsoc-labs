@@ -34,7 +34,7 @@ void FFTAudioSampler::stopSampling(){
 void FFTAudioSampler::sample(){
   int value = analogRead(ADC_PORT);
 
-  _audioBuffer[_currentBuffer][_currentIndex++] = (double)value;
+  _audioBuffer[_currentBuffer][_currentIndex++] = (double)value;///4096.0) * 3.3;
   
   if(_currentIndex >= NUM_SAMPLES){
      // trigger callback 

@@ -1,13 +1,13 @@
-//#include <SparkFunESP8266Client.h>
-//#include <SparkFunESP8266Server.h>
-#include <SparkFunESP8266WiFi.h>
-
 #include <arduinoFFT.h>
 #include <FreeRTOS_ARM.h>
 #include <IPAddress.h>
+#include <SparkFunESP8266WiFi.h>
 
 #include "FFTAudioSampler.h"
 #include "FFTConfig.h"
+#include "PowerDue.h"
+
+#define MIN_CHUNK_SIZE 1500
 
 #if NET_SUBMIT
 ESP8266Client client;
@@ -22,8 +22,6 @@ arduinoFFT FFT = arduinoFFT();
 
 char wifi_ssid[] = "CMU-SV";            // your network SSID (name)
 char wifi_pass[] = "";        // your network password
-//char wifi_ssid[] = "Nexus5";            // your network SSID (name)
-//char wifi_pass[] = "password";        // your network password
 
 char server_host[] = "10.0.15.226";
 int server_port = 80;
@@ -39,10 +37,18 @@ char server_endpoint[] = "/CefRamirez/signal";
 double vReal[NUM_SAMPLES];
 double vImag[NUM_SAMPLES];
 
+volatile boolean flip = false;
+
 void buffer_ready(double *audioSample, int bufferSize){
   BaseType_t xHigherPriorityTaskWoken;
-  AudioSampler.stopSampling();
   xQueueSendToBackFromISR(xAudioBufferQueue, &audioSample, &xHigherPriorityTaskWoken);
+  AudioSampler.stopSampling();
+//  if(flip){
+//    pd_rgb_led(PD_GREEN);
+//  } else {
+//    pd_rgb_led(PD_OFF);
+//  }
+//  flip = !flip;
 }
 
 static void Task_FFT(void *arg){
@@ -50,12 +56,14 @@ static void Task_FFT(void *arg){
   while(1){
     if(xQueueReceive(xAudioBufferQueue, &audioBuffer, portMAX_DELAY)){
       if(audioBuffer != NULL){
+//        pd_rgb_led(PD_GREEN);
         //copy data over to fft buffer
         for(int i=0; i < NUM_SAMPLES; i++){
-          vReal[i] = audioBuffer[i];
+          vReal[i] = 0.000805664 * audioBuffer[i];
           vImag[i] = 0;
         }
-        
+
+        long start = millis();
         // compute FFT
 #if LOCAL_FFT
           FFT.Windowing(vReal, NUM_SAMPLES, FFT_WIN_TYP_HAMMING, FFT_FORWARD);  /* Weigh data */
@@ -67,9 +75,14 @@ static void Task_FFT(void *arg){
 #else
           SerialUSB.println("Buffer full.. skipping FFT computation..");          
 #endif
-
+          SerialUSB.print("time: " );
+          SerialUSB.print(millis() - start);
+          SerialUSB.println("ms");
+//        pd_rgb_led(PD_OFF);
         // transmit packet
         xQueueSendToBack(xSenderQueue, &vReal, portMAX_DELAY);
+//      AudioSampler.startSampling(SAMPLING_RATE);
+
       }
       audioBuffer = NULL;
     }
@@ -84,11 +97,18 @@ static void Task_Sender(void *arg){
     int status = esp8266.status();
     SerialUSB.print("status: ");
     SerialUSB.println(status);
+    if(status != 1 && status != 0){
+      // dont try to send packet
+      SerialUSB.println("invalid status..");
+      AudioSampler.startSampling(SAMPLING_RATE);
+      continue;
+    }
             
       SerialUSB.println("Sending packet....");
       String head = "";
       String packet = "";
 
+#if !HTTP_TRANSFER_ENCODING_CHUNKED
        // send json encoded data
       packet.concat("{\"data\":[");
       for(int i=0; i < NUM_SAMPLES; i++){
@@ -105,43 +125,79 @@ static void Task_Sender(void *arg){
 #if !LOCAL_FFT
       packet.concat(", \"sampleRate\": ");
       packet.concat(SAMPLING_RATE);
-#endif
+#endif // !LOCAL_FFT
       packet.concat("}");
-      packet.concat("\r\n");
-      
+#endif // HTTP_TRANSFER_ENCODING_CHUNKED
+
+      head.concat("POST ");
+      head.concat(server_endpoint);
+      head.concat(" HTTP/1.1");
+      head.concat("\r\n");
+      head.concat("Content-Type: application/json");
+      head.concat("\r\n");
+#if HTTP_TRANSFER_ENCODING_CHUNKED
+      head.concat("Transfer-Encoding: chunked");
+#else
+      head.concat("Content-Length: ");     
+      head.concat(packet.length());
+#endif     
+      head.concat("\r\n");
+      head.concat("\r\n");
+          
 #if NET_SUBMIT
+        pd_rgb_led(PD_WHITE);
         int retval = client.connect(server_ip, server_port);
         if( retval > 0){
           // send post request headers
           SerialUSB.println("Connected to server...");
-          head.concat("POST ");
-          head.concat(server_endpoint);
-          head.concat(" HTTP/1.0");
-          head.concat("\r\n");
-          head.concat("Content-Type: application/json");
-          head.concat("\r\n");
-//          head.concat("Transfer-Encoding: chunked");
-//          head.concat("\r\n");
-          head.concat("\r\n");
 #endif         
 
-          SerialUSB.print(head);
-//          SerialUSB.print(packet.length(), HEX);
-//          SerialUSB.print("\r\n");
-          SerialUSB.print(packet);
-//          SerialUSB.print("0\r\n");
-//          SerialUSB.print("\r\n");
+          // send HTTP header 
           client.print(head);
-//          client.print(packet.length(), HEX);
-//          client.print("\r\n");
-          client.print(packet);
-//          client.print("0\r\n");
-//          client.print("\r\n");
-      
-#if NET_SUBMIT
-          client.stop();
 
-          // flush response
+#if HTTP_TRANSFER_ENCODING_CHUNKED
+          // support chunked encoding in case arduino or esp8266 cannot handle large buffers
+          packet.concat("{\"data\":[");
+          for(int i=0; i < NUM_SAMPLES; i++){
+            packet.concat("[");
+            packet.concat(i);
+            packet.concat(",");
+            packet.concat(vReal[i]);
+            packet.concat("]");
+            if(i < NUM_SAMPLES-1){
+              packet.concat(",");
+            }
+
+            if(packet.length() > MIN_CHUNK_SIZE){
+              // send it out
+              //chunk size
+              SerialUSB.print(packet);
+              String line = "\r\n" + packet + "\r\n";
+              client.print(packet.length(),HEX);
+              client.print(line);
+              packet = "";
+            }
+          }
+          packet.concat("]");
+    #if !LOCAL_FFT
+          packet.concat(", \"sampleRate\": ");
+          packet.concat(SAMPLING_RATE);
+    #endif
+          packet.concat("}");
+
+          SerialUSB.print(packet);
+          String line = "\r\n" + packet + "\r\n";
+
+          client.print(packet.length(),HEX);
+          client.print(line);
+          client.print("0\r\n\r\n");
+
+#else
+          // normal HTTP content-length send entire packet
+          client.print(packet);
+#endif  
+
+#if NET_SUBMIT
           while(client.available()){
             char c = client.read();
             SerialUSB.write(c);
@@ -150,16 +206,19 @@ static void Task_Sender(void *arg){
           if(client.connected()){
             SerialUSB.println();
             SerialUSB.println("Disconnecting from server...");
+            client.stop();
           }
         } // close client connection
         else {
           SerialUSB.println("Failed to connect to server.");
           SerialUSB.println(retval);
         }
-#endif
-      AudioSampler.startSampling(SAMPLING_RATE);
-      
+        pd_rgb_led(PD_OFF);
+#endif   
+   
     }
+      AudioSampler.startSampling(SAMPLING_RATE);
+
   }
 }
 
@@ -167,6 +226,10 @@ void setup() {
   SerialUSB.begin(115200);
   while(!SerialUSB);
   SerialUSB.println("Ready!");
+
+//  pd_rtos_init();
+  pd_rgb_led_init();
+  pd_rgb_led(PD_RED);
 
   server_ip.fromString(server_host);
   SerialUSB.print("Server IP: ");
@@ -183,8 +246,11 @@ void setup() {
   xAudioBufferQueue = xQueueCreate(AUDIO_BUFFER_QUEUE_SIZE, sizeof(double *));
   xSenderQueue = xQueueCreate(SENDER_QUEUE_SIZE, sizeof(double *));
 
-  xTaskCreate(Task_Sender, NULL, 400, NULL, 0, NULL);
-  xTaskCreate(Task_FFT, NULL, 400, NULL, 0, NULL);
+  TaskHandle_t xHandle = NULL;
+  xTaskCreate(Task_Sender, NULL, 400, NULL, 0, &xHandle);
+  vTaskSetTaskNumber(xHandle, 1);
+  xTaskCreate(Task_FFT, NULL, 400, NULL, 0, &xHandle);
+  vTaskSetTaskNumber(xHandle, 8);
 
   SerialUSB.println("Tasks ready!");
 
@@ -205,14 +271,28 @@ void loop() {
 /* Utility Methods */
 void initializeWiFi()
 {
-  int test = esp8266.begin();
+  int test = esp8266.begin(9600);
   if (test != true)
   {
     SerialUSB.println(F("Error talking to ESP8266."));
     errorLoop(test);
   }
+
+  char atversion[128];
+  char sdkversion[128];
+  char compileTime[128];
+//  esp8266.getVersion(&atversion, &sdkversion, &compileTime);
+//  SerialUSB.print("at version: ");
+//  SerialUSB.println(atversion);
+//  SerialUSB.print("sdk version: ");
+//  SerialUSB.println(sdkversion);
+  
   SerialUSB.println(F("ESP8266 Shield Present"));
-  esp8266.reset();
+//  while(1){
+    esp8266.reset();
+//    delay(10);  
+//  }
+  
   esp8266.setMux(1);
   // The ESP8266 can be set to one of three modes:
   //  1 - ESP8266_MODE_STA - Station only
@@ -220,11 +300,11 @@ void initializeWiFi()
   //  3 - ESP8266_MODE_STAAP - Station/AP combo
   // Use esp8266.getMode() to check which mode it's in:
   int retVal = esp8266.getMode();
-  if (retVal != ESP8266_MODE_STA)
+  if (retVal != ESP8266_MODE_STAAP)
   { // If it's not in station mode.
     // Use esp8266.setMode([mode]) to set it to a specified
     // mode.
-    retVal = esp8266.setMode(ESP8266_MODE_STA);
+    retVal = esp8266.setMode(ESP8266_MODE_STAAP);
     if (retVal < 0)
     {
       SerialUSB.println(F("Error setting mode."));
